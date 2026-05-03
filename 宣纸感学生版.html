@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生端 - 苏轼心路轨迹</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "KaiTi", "STKaiti", "Microsoft YaHei", serif;
+        }
+        body {
+            background-color: #f5f0e1;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%23d3c4a9' fill-opacity='0.08'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='90' cy='60' r='3'/%3E%3Ccircle cx='160' cy='140' r='2.5'/%3E%3Ccircle cx='50' cy='180' r='2'/%3E%3Ccircle cx='190' cy='30' r='1.5'/%3E%3C/g%3E%3Cg fill='none' stroke='%23c0b49e' stroke-opacity='0.12' stroke-width='1'%3E%3Cpath d='M0 50 Q40 20 80 50 T160 50'/%3E%3Cpath d='M0 130 Q50 100 100 130 T200 130'/%3E%3C/g%3E%3C/svg%3E");
+            color: #4a3c32;
+            min-height: 100vh;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 30px;
+            color: #5c4739;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        .tips {
+            font-size: 17px;
+            color: #705a4a;
+            margin-bottom: 25px;
+        }
+        .canvas-wrapper {
+            max-width: 900px;
+            width: 95%;
+            height: 420px;
+            margin: 0 auto 20px;
+            background: #ffffffaa;
+            border: 2px solid #c0a98e;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .labels {
+            display: flex;
+            justify-content: space-between;
+            max-width: 860px;
+            width: 90%;
+            margin: 0 auto 20px;
+            color: #826652;
+            font-size: 16px;
+        }
+        input {
+            padding: 10px 15px;
+            width: 170px;
+            font-size: 15px;
+            margin: 8px 6px;
+            border: 1px solid #c0a98e;
+            border-radius: 6px;
+            background: #fff;
+            color: #4a3c32;
+        }
+        button {
+            padding: 11px 28px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #c0a98e;
+            color: #fff;
+            cursor: pointer;
+            margin: 6px;
+        }
+        button:hover {
+            background: #a88e72;
+        }
+    </style>
+</head>
+<body>
+    <h2>《念奴娇·赤壁怀古》心路轨迹</h2>
+    <p class="tips">中点 = 平静 ｜ 上方 = 豪迈 ｜ 下方 = 怅惘</p>
+
+    <div class="canvas-wrapper">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="labels">
+        <span>大江东去</span>
+        <span>乱石穿空</span>
+        <span>江山如画</span>
+        <span>遥想公瑾</span>
+        <span>雄姿英发</span>
+        <span>多情应笑我</span>
+        <span>人生如梦</span>
+    </div>
+
+    <input type="text" id="name" placeholder="姓名">
+    <input type="text" id="cls" placeholder="班级">
+    <br>
+    <button onclick="reset()">重新绘制</button>
+    <button onclick="submit()">提交给老师</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = canvas.offsetWidth;
+        let h = canvas.height = canvas.offsetHeight;
+        let mid = h / 2;
+        let drawing = false, points = [];
+
+        function bg() {
+            ctx.clearRect(0,0,w,h);
+            ctx.strokeStyle = '#b8a998';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, mid);
+            ctx.lineTo(w, mid);
+            ctx.stroke();
+        }
+
+        function start(e) {
+            drawing = true;
+            const r = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - r.left;
+            const y = (e.clientY || e.touches[0].clientY) - r.top;
+            points = [{x,y}];
+        }
+
+        function drawMove(e) {
+            if (!drawing) return;
+            const r = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - r.left;
+            const y = (e.clientY || e.touches[0].clientY) - r.top;
+            points.push({x,y});
+            bg();
+            ctx.strokeStyle = '#7a5c48';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            points.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.stroke();
+        }
+
+        function stop() { drawing = false; }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', drawMove);
+        canvas.addEventListener('mouseup', stop);
+        canvas.addEventListener('mouseleave', stop);
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); start(e); });
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); drawMove(e); });
+        canvas.addEventListener('touchend', stop);
+
+        function reset() { points = []; bg(); }
+
+        function submit() {
+            const name = document.getElementById('name').value.trim();
+            const cls = document.getElementById('cls').value.trim();
+            if (!name || !cls || points.length < 2) {
+                alert('请填写信息并绘制轨迹');
+                return;
+            }
+            const data = { name, cls, points, w, h };
+            let list = JSON.parse(localStorage.getItem('traces') || '[]');
+            list.push(data);
+            localStorage.setItem('traces', JSON.stringify(list));
+            alert('提交成功！老师已收到');
+        }
+
+        bg();
+    </script>
+</body>
+</html>
